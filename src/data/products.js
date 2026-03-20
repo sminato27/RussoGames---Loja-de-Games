@@ -95,28 +95,28 @@ Edição Deluxe inclui conteúdos exclusivos, roupas especiais e itens adicionai
   // --------------------------------------------------------------------------
   // 🔥 PRODUTO 3
   // --------------------------------------------------------------------------
-//   {
-//     id: 3,
-//     title: "Monster Hunter Wilds — Premium Deluxe",
-//     subtitle: "STEAM • Ativação Offline",
-//     description: `O mais novo capítulo da lendária saga Monster Hunter! Caçadas épicas em ambientes vivos e dinâmicos, novos monstros e mecânicas inovadoras.
-//
-// Premium Deluxe inclui pacote de personalização completo, itens exclusivos e DLCs adicionais.`,
-//     price: "R$ 99,90",
-//     originalPrice: "R$ 450,00",
-//     category: "Steam",
-//     badge: "Hot",
-//     image: "https://cdn.akamai.steamstatic.com/steam/apps/2246340/header.jpg",
-//     paymentUrl: "COLOQUE_SEU_LINK_DE_PAGAMENTO_AQUI", // ← 🔗 SUBSTITUA PELO SEU LINK
-//     features: [
-//       "Última edição Monster Hunter",
-//       "Premium Deluxe com todos os extras",
-//       "Caçadas solo ou cooperativo",
-//       "Modo offline",
-//       "Suporte 24/7",
-//     ],
-//     tags: ["Ação", "RPG", "Co-op"],
-//   },
+  {
+    id: 3,
+    title: "Resident Evil Requiem — Deluxe",
+    subtitle: "STEAM • Ativação Offline",
+    description: `Uma nova era do terror de sobrevivência chega com Resident Evil Requiem, o mais recente e imersivo título da icônica série Resident Evil. 
+    Vivencie o terror de sobrevivência com a analista do FBI Grace Ashcroft e mergulhe em ação eletrizante com o lendário agente Leon S. Kennedy.
+     As jornadas de ambos e seus estilos de jogo únicos se entrelaçam em uma experiência emocionante e de tirar o fôlego que vai te arrepiar até a alma. `,
+    price: "$4.45",
+    originalPrice: "$69.99",
+    category: "Steam",
+    badge: "Hot",
+    image: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3764200/ce5437442768e38eb575f205ab9397d0264017b0/header.jpg?t=1772587704",
+    paymentUrl: "https://www.oplata.info/asp2/pay_wm.asp?id_d=5725897&ai=1444941&_ow=0", // ← 🔗 SUBSTITUA PELO SEU LINK
+    features: [
+      "Requiem para os mortos. Pesadelo para os vivos",
+      "Premium Deluxe com todos os extras",
+      "Modo offline",
+      "Suporte 24/7",
+      "Em 95% dos casos, se o acesso for perdido por negligência do comprador, nós garantimos a re-ativação",
+    ],
+    tags: ["Ação", "Terror", "Aventura"],
+  },
 
   // --------------------------------------------------------------------------
   // 🔥 PRODUTO 4
@@ -367,7 +367,7 @@ export const storeConfig = {
   storeName: "RussoGames",           // Nome da sua loja
   storeTagline: "Ativações Premium • Preço Justo • Suporte Real",
   whatsapp: "",                     // Seu número WhatsApp (ex: "5511999999999") ou "" para desativar
-  telegram: "SMinato27",                     // Seu usuário Telegram (ex: "seu_usuario") ou "" para desativar
+  telegram: "",                     // Seu usuário Telegram (ex: "seu_usuario") ou "" para desativar
   discord: "https://discord.com/users/@sminato27",                      // Link do seu Discord ou "" para desativar
   supportEmail: "",                 // Email de suporte ou "" para desativar
 

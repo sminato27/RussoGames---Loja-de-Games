@@ -54,7 +54,7 @@ export default function Footer() {
                 {storeConfig.telegram && <li><a href={`https://t.me/${storeConfig.telegram}`} target="_blank" rel="noopener noreferrer" className={styles.navLink}>Telegram</a></li>}
                 {storeConfig.supportEmail && <li><a href={`mailto:${storeConfig.supportEmail}`} className={styles.navLink}>Email</a></li>}
                 {!storeConfig.whatsapp && !storeConfig.telegram && !storeConfig.supportEmail && (
-                  <li><span className={styles.navLinkMuted}>Configure no products.js</span></li>
+                  <li><span className={styles.navLinkMuted}>Link do suporte no e-mail da compra.</span></li>
                 )}
               </ul>
             </div>
