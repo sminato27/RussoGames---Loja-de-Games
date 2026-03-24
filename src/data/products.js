@@ -75,7 +75,7 @@ Ao adquirir, você recebe acesso à conta Steam com a Deluxe Edition completa, i
     description: `Uma obra-prima do action RPG inspirada no clássico chinês "A Jornada ao Oeste". Gráficos de tirar o fôlego com Unreal Engine 5, combate fluido e uma narrativa épica.
 
 Edição Deluxe inclui conteúdos exclusivos, roupas especiais e itens adicionais.`,
-    price: "$3.81",
+    price: "$3.95",
     originalPrice: "$59.99",
     category: "Steam",
     badge: "Hot",
@@ -102,7 +102,7 @@ Edição Deluxe inclui conteúdos exclusivos, roupas especiais e itens adicionai
     description: `Uma nova era do terror de sobrevivência chega com Resident Evil Requiem, o mais recente e imersivo título da icônica série Resident Evil. 
     Vivencie o terror de sobrevivência com a analista do FBI Grace Ashcroft e mergulhe em ação eletrizante com o lendário agente Leon S. Kennedy.
      As jornadas de ambos e seus estilos de jogo únicos se entrelaçam em uma experiência emocionante e de tirar o fôlego que vai te arrepiar até a alma. `,
-    price: "$4.45",
+    price: "$3.95",
     originalPrice: "$69.99",
     category: "Steam",
     badge: "Hot",
