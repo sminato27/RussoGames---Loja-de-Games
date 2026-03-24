@@ -48,7 +48,7 @@ export const products = [
     description: `Crimson Desert é o épico RPG de ação e aventura em mundo aberto da Pearl Abyss. Explore um vasto continente repleto de histórias, combates intensos e gráficos impressionantes.
 
 Ao adquirir, você recebe acesso à conta Steam com a Deluxe Edition completa, incluindo todos os conteúdos exclusivos e DLCs da edição especial.`,
-    price: "$5.71",
+    price: "$5.26",
     originalPrice: "$70",
     category: "Steam",
     badge: "Novo",
