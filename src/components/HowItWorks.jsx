@@ -39,7 +39,7 @@ const steps = [
       </svg>
     ),
     title: 'Ative e Jogue!',
-    desc: 'Siga as instruções de ativação conforme o e-mail e o PDF em inglês lembrando de iniciar o jogo com a Steam em modo offline. Depois troque pra sua conta principal e jogue normalmente.',
+    desc: 'Siga as instruções de ativação conforme o e-mail e o PDF em inglês lembrando de iniciar o jogo com a Steam em modo offline.',
   },
 ]
 
