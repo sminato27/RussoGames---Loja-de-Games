@@ -35,6 +35,7 @@ const PRODUCTS = [
   { id: 1,  title: 'Crimson Desert — Deluxe',           digisellerProductId: 5792408, steamAppId: 3321460 },
   { id: 2,  title: 'Black Myth: Wukong — Deluxe',       digisellerProductId: 4573385, steamAppId: 2358720 },
   { id: 3,  title: 'Resident Evil Requiem — Deluxe',    digisellerProductId: 5725897, steamAppId: 3764200 },
+  { id: 4,  title: 'F1 25: Iconic',                     digisellerProductId: 5198250, steamAppId: 3059520 },
   { id: 7,  title: 'EA Sports FC 26',                   digisellerProductId: 5431131, steamAppId: 3405690 },
   { id: 10, title: "Assassin's Creed Shadows — Deluxe", digisellerProductId: 5065337, steamAppId: 3159330 },
   { id: 11, title: 'DOOM: The Dark Ages — Premium',     digisellerProductId: 5156821, steamAppId: 3017860 },

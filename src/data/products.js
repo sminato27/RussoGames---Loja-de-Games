@@ -158,6 +158,29 @@ export const products = [
     ],
     tags: ["FPS", "Ação", "Shooter"],
   },
+  {
+    id: 4,
+    title: "F1 25: Iconic",
+    subtitle: "STEAM • Ativação Offline",
+    description: `Deixe sua marca no mundo do automobilismo no F1® 25, o jogo oficial do 2025 FIA Formula One World Championship™, que traz o modo Minha Equipe reformulado, o terceiro e emocionante capítulo de Ponto de Frenagem e muito mais!`,
+    price: "$2.98",
+    originalPrice: "$23.09",
+    steamAppId: 3059520,
+    digisellerProductId: 5198250,
+    category: "Steam",
+    badge: "Hot",
+    image: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3059520/37f833ca5bd3d5c3eec2b411131f3e00f580bbe7/header.jpg?t=1772707224",
+    paymentUrl: "https://www.oplata.info/asp2/pay_wm.asp?id_d=5198250&ai=1444941&_ow=0",
+    features: [
+      "Uma nova era da Formula One",
+      "Pacote Iconic do Lewis Hamilton",
+      "Pilotos ídolos da F3",
+      "Modo offline",
+      "Suporte 24/7",
+      "Em 95% dos casos, se o acesso for perdido por negligência do comprador, nós garantimos a re-ativação",
+    ],
+    tags: ["Corrida", "Simulação", "Esportes"],
+  },
 
   // ➕ ADICIONE NOVOS PRODUTOS AQUI
 ];
