@@ -1,0 +1,90 @@
+name: 🎮 Atualizar Preços
+
+# ─────────────────────────────────────────────────────────────
+# Triggers
+# ─────────────────────────────────────────────────────────────
+on:
+  # Executa automaticamente a cada 6 horas
+  schedule:
+    - cron: '0 */6 * * *'
+
+  # Permite disparar manualmente pelo painel do GitHub Actions
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Forçar commit mesmo sem mudanças?'
+        required: false
+        default: 'false'
+        type: boolean
+
+# ─────────────────────────────────────────────────────────────
+# Permissões necessárias para fazer push do prices.json
+# ─────────────────────────────────────────────────────────────
+permissions:
+  contents: write
+
+jobs:
+  update-prices:
+    name: Atualizar prices.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # 1. Checkout do repositório
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # 2. Configura Node.js 20
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: scripts/package.json
+
+      # 3. Instala dependências do scraper
+      - name: 📦 Instalar dependências
+        run: npm install
+        working-directory: scripts
+
+      # 4. Executa o script de atualização de preços
+      - name: 🔍 Atualizar preços
+        run: node scripts/update-prices.js
+        env:
+          # Variável opcional: se definida, sobrescreve a URL do steamaccountpro
+          # Útil para testar com um mirror ou site alternativo
+          PRICE_SOURCE_URL: ${{ secrets.PRICE_SOURCE_URL }}
+
+      # 5. Faz commit do prices.json APENAS se houve mudanças
+      - name: 💾 Commit prices.json (se mudou)
+        run: |
+          git config user.name  "RussoGames PriceBot"
+          git config user.email "pricebot@russogames.com"
+
+          # Verifica se o arquivo mudou
+          if git diff --quiet public/prices.json; then
+            echo "✅ Nenhuma mudança de preço detectada."
+            if [ "${{ inputs.force }}" = "true" ]; then
+              echo "⚡ Forçando commit..."
+              git add public/prices.json
+              git commit -m "chore(prices): atualização forçada [skip ci]" --allow-empty
+              git push
+            fi
+          else
+            echo "📝 Mudanças detectadas — fazendo commit..."
+            git add public/prices.json
+            git commit -m "chore(prices): atualização automática $(date -u '+%Y-%m-%d %H:%M UTC') [skip ci]"
+            git push
+            echo "✅ prices.json atualizado e commitado!"
+          fi
+
+      # 6. (Opcional) Notifica via Discord em caso de falha
+      # Descomente e configure DISCORD_WEBHOOK_URL nos Secrets do repositório
+      # - name: 🔔 Notificar falha no Discord
+      #   if: failure()
+      #   run: |
+      #     curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+      #       -H "Content-Type: application/json" \
+      #       -d "{\"content\": \"⚠️ **RussoGames PriceBot** falhou na atualização de preços! Verifique o workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
