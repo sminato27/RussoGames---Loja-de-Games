@@ -4,17 +4,21 @@
 //
 // Campos obrigatórios: id, title, price, category, paymentUrl
 // Campos opcionais:    subtitle, description, originalPrice, badge,
-//                      image, features, tags, steamAppId
+//                      image, features, tags,
+//                      steamAppId, digisellerProductId
 //
 // ─────────────────────────────────────────────────────────────────────────────
+// 💡 digisellerProductId: número id_d presente na paymentUrl de cada produto
+//    Ex: paymentUrl="...?id_d=5792408..." → digisellerProductId: 5792408
+//    Usado pelo script para buscar o price (preço de venda) via Digiseller API.
+//
 // 💡 steamAppId: ID numérico do jogo na Steam (ex: 3321460 para Crimson Desert)
-//    Encontre em: https://store.steampowered.com/search/?term=nome+do+jogo
-//    O ID aparece na URL da página do jogo: /app/XXXXX/
-//    Obrigatório para atualização automática do originalPrice (Steam retail).
+//    Encontre em: store.steampowered.com — o número na URL /app/XXXXX/
+//    Usado para buscar o originalPrice (preço cheio oficial) via Steam API.
 //
 // 💡 price / originalPrice: atualizados AUTOMATICAMENTE pelo GitHub Actions.
-//    Scripts: scripts/update-prices.js
-//    Os valores aqui são o fallback caso a atualização automática falhe.
+//    Script: scripts/update-prices.js — roda a cada 6h e commita prices.json.
+//    Os valores abaixo são apenas fallback se a atualização falhar.
 // =============================================================================
 
 export const products = [
@@ -26,6 +30,7 @@ export const products = [
     price: "$5.26",
     originalPrice: "$70.00",
     steamAppId: 3321460,
+    digisellerProductId: 5792408,
     category: "Steam",
     badge: "Novo",
     image: "https://cdn.akamai.steamstatic.com/steam/apps/3321460/header.jpg",
@@ -47,6 +52,7 @@ export const products = [
     price: "$3.95",
     originalPrice: "$59.99",
     steamAppId: 2358720,
+    digisellerProductId: 4573385,
     category: "Steam",
     badge: "Hot",
     image: "https://cdn.akamai.steamstatic.com/steam/apps/2358720/header.jpg",
@@ -69,6 +75,7 @@ export const products = [
     price: "$3.95",
     originalPrice: "$69.99",
     steamAppId: 3764200,
+    digisellerProductId: 5725897,
     category: "Steam",
     badge: "Hot",
     image: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3764200/ce5437442768e38eb575f205ab9397d0264017b0/header.jpg?t=1772587704",
@@ -90,6 +97,7 @@ export const products = [
     price: "$5.71",
     originalPrice: "$20.99",
     steamAppId: 3405690,
+    digisellerProductId: 5431131,
     category: "EA App",
     badge: "Novo",
     image: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3405690/2d96aa1b06e453cd62dae9029d412f19e61932c3/header.jpg?t=1773426592",
@@ -112,6 +120,7 @@ export const products = [
     price: "$2.98",
     originalPrice: "$35.99",
     steamAppId: 3159330,
+    digisellerProductId: 5065337,
     category: "Steam",
     badge: "Novo",
     image: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3159330/header.jpg?t=1774024749",
@@ -134,6 +143,7 @@ export const products = [
     price: "$2.98",
     originalPrice: "$23.09",
     steamAppId: 3017860,
+    digisellerProductId: 5156821,
     category: "Steam",
     badge: "Hot",
     image: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3017860/header.jpg?t=1768344167",

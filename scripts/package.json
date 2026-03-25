@@ -1,15 +1,12 @@
 {
   "name": "russogames-price-updater",
-  "version": "1.0.0",
-  "description": "Scraper de preços automático para RussoGames",
+  "version": "2.0.0",
+  "description": "Atualizador de preços via Digiseller API + Steam Store API",
   "type": "module",
   "private": true,
   "scripts": {
     "update": "node update-prices.js",
-    "test-selectors": "node test-selectors.js"
-  },
-  "dependencies": {
-    "cheerio": "^1.0.0"
+    "inspect": "node inspect-api.js"
   },
   "engines": {
     "node": ">=18"

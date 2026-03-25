@@ -1,144 +1,96 @@
 /**
  * ============================================================
- * test-selectors.js — Diagnóstico de seletores HTML
+ * inspect-api.js — Inspetor da Digiseller API
  * ============================================================
  *
- * Use este script para descobrir os seletores corretos do site
- * antes de configurar o SCRAPER_CONFIG no update-prices.js.
+ * Usa para debugar quando um preço não está sendo encontrado.
+ * Imprime a resposta bruta da API para cada produto.
  *
  * Uso:
  *   node scripts/test-selectors.js
- *
- * O script imprime o HTML simplificado dos elementos encontrados
- * para cada seletor, permitindo que você ajuste a configuração.
  * ============================================================
  */
 
-import * as cheerio from 'cheerio'
+const PRODUCTS = [
+  { id: 1,  title: 'Crimson Desert — Deluxe',          digisellerProductId: 5792408, steamAppId: 3321460 },
+  { id: 2,  title: 'Black Myth: Wukong — Deluxe',      digisellerProductId: 4573385, steamAppId: 2358720 },
+  { id: 3,  title: 'Resident Evil Requiem — Deluxe',   digisellerProductId: 5725897, steamAppId: 3764200 },
+  { id: 7,  title: 'EA Sports FC 26',                  digisellerProductId: 5431131, steamAppId: 3405690 },
+  { id: 10, title: "Assassin's Creed Shadows — Deluxe",digisellerProductId: 5065337, steamAppId: 3159330 },
+  { id: 11, title: 'DOOM: The Dark Ages — Premium',    digisellerProductId: 5156821, steamAppId: 3017860 },
+]
 
-const BASE_URL = 'https://steamaccountpro.exaccess.com'
 const HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
 }
 
-async function fetchPage(url) {
-  console.log(`\nFetching: ${url}`)
-  const controller = new AbortController()
-  setTimeout(() => controller.abort(), 15000)
-
-  const res = await fetch(url, { headers: HEADERS, signal: controller.signal })
-  console.log(`Status: ${res.status} ${res.statusText}`)
-  return res.ok ? await res.text() : null
+async function fetchJson(url) {
+  const res = await fetch(url, { headers: HEADERS })
+  console.log(`  Status: ${res.status}`)
+  if (!res.ok) return null
+  return res.json()
 }
 
-function analyzeHtml(html) {
-  const $ = cheerio.load(html)
+async function inspectDigiseller() {
+  console.log('\n' + '═'.repeat(55))
+  console.log('🔍 DIGISELLER API — Resposta bruta por produto')
+  console.log('═'.repeat(55))
 
-  // ── 1. JSON-LD ──────────────────────────────────────────
-  console.log('\n' + '═'.repeat(50))
-  console.log('1. BLOCOS JSON-LD ENCONTRADOS:')
-  const ldBlocks = $('script[type="application/ld+json"]')
-  console.log(`   ${ldBlocks.length} blocos encontrados`)
-  ldBlocks.each((i, el) => {
-    try {
-      const data = JSON.parse($(el).html())
-      console.log(`\n   Bloco ${i + 1}:`, JSON.stringify(data, null, 2).slice(0, 500))
-    } catch {
-      console.log(`   Bloco ${i + 1}: JSON inválido`)
-    }
-  })
-
-  // ── 2. Seletores candidatos para cards ──────────────────
-  console.log('\n' + '═'.repeat(50))
-  console.log('2. SELETORES CANDIDATOS A CARDS DE PRODUTO:')
-
-  const candidateSelectors = [
-    'article', '.product', '.item', '.card',
-    '[class*="product"]', '[class*="item"]', '[class*="card"]',
-    '[class*="game"]', '[class*="offer"]', 'li[class]',
-  ]
-
-  for (const sel of candidateSelectors) {
-    const count = $(sel).length
-    if (count > 0) {
-      console.log(`\n   Seletor "${sel}": ${count} elementos`)
-      // Mostra o primeiro elemento de forma simplificada
-      const first = $(sel).first()
-      const text = first.text().replace(/\s+/g, ' ').trim().slice(0, 150)
-      const classes = first.attr('class') || '(sem classe)'
-      console.log(`   └─ classes: ${classes}`)
-      console.log(`   └─ texto: "${text}"`)
+  for (const p of PRODUCTS) {
+    console.log(`\n▶  ${p.title} (id_d=${p.digisellerProductId})`)
+    const url  = `https://api.digiseller.com/api/products/${p.digisellerProductId}/content?currency=USD`
+    console.log(`   URL: ${url}`)
+    const data = await fetchJson(url)
+    if (data) {
+      console.log('   Resposta:')
+      console.log(JSON.stringify(data, null, 2).split('\n').map(l => '   ' + l).join('\n').slice(0, 800))
+    } else {
+      console.log('   ❌ Sem resposta')
     }
   }
+}
 
-  // ── 3. Seletores candidatos a preços ───────────────────
-  console.log('\n' + '═'.repeat(50))
-  console.log('3. SELETORES CANDIDATOS A PREÇOS (contêm "$"):')
+async function inspectSteam() {
+  console.log('\n\n' + '═'.repeat(55))
+  console.log('🔍 STEAM API — Resposta bruta por produto')
+  console.log('═'.repeat(55))
 
-  const allElements = $('*')
-  const priceSet = new Set()
-  allElements.each((_, el) => {
-    const text = $(el).children().length === 0 ? $(el).text().trim() : ''
-    if (text && /\$\d+(\.\d{2})?/.test(text)) {
-      const cls = $(el).attr('class') || el.name
-      priceSet.add(`${el.name}.${cls}: "${text}"`)
+  const appIds = PRODUCTS.filter(p => p.steamAppId).map(p => p.steamAppId).join(',')
+  const url = `https://store.steampowered.com/api/appdetails?appids=${appIds}&filters=price_overview&cc=us&l=english`
+  console.log(`\nURL: ${url}`)
+  const data = await fetchJson(url)
+
+  if (!data) {
+    console.log('❌ Sem resposta da Steam API')
+    return
+  }
+
+  for (const p of PRODUCTS) {
+    if (!p.steamAppId) continue
+    const entry = data[p.steamAppId]
+    console.log(`\n▶  ${p.title} (appId=${p.steamAppId})`)
+    if (!entry?.success) {
+      console.log('   ❌ success=false')
+      continue
     }
-  })
-  ;[...priceSet].slice(0, 20).forEach(s => console.log(`   ${s}`))
-
-  // ── 4. Estrutura geral ──────────────────────────────────
-  console.log('\n' + '═'.repeat(50))
-  console.log('4. ESTRUTURA DA PÁGINA (tags únicas com classes):')
-  const tagMap = new Map()
-  $('[class]').each((_, el) => {
-    const tag = el.name
-    const cls = $(el).attr('class').split(' ').filter(Boolean)
-    cls.forEach(c => {
-      if (c.length > 2) tagMap.set(`${tag}.${c}`, (tagMap.get(`${tag}.${c}`) || 0) + 1)
-    })
-  })
-  ;[...tagMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 30)
-    .forEach(([k, v]) => console.log(`   ${k}: ${v}x`))
+    const po = entry.data?.price_overview
+    if (!po) {
+      console.log('   ℹ  price_overview ausente (free-to-play ou pre-release)')
+      continue
+    }
+    console.log(`   initial (centavos): ${po.initial}  →  $${(po.initial / 100).toFixed(2)}`)
+    console.log(`   final  (centavos):  ${po.final}    →  $${(po.final / 100).toFixed(2)}`)
+    console.log(`   currency: ${po.currency}`)
+  }
 }
 
 async function main() {
-  console.log('🔍 RussoGames — Diagnóstico de Seletores')
-  console.log('='.repeat(50))
-
-  // Página inicial
-  const html = await fetchPage(BASE_URL)
-  if (!html) {
-    console.error('\n❌ Não foi possível acessar o site.')
-    console.log('\nPossíveis causas:')
-    console.log('  • Site bloqueando IPs externos (use VPN ou proxy)')
-    console.log('  • Site fora do ar')
-    console.log('  • URL incorreta')
-    process.exit(1)
-  }
-
-  analyzeHtml(html)
-
-  // Tenta rotas alternativas de catálogo
-  const altRoutes = ['/catalog', '/products', '/games', '/store', '/shop']
-  for (const route of altRoutes) {
-    const altHtml = await fetchPage(`${BASE_URL}${route}`)
-    if (altHtml && altHtml.length > 1000) {
-      console.log(`\n✓ Rota "${route}" existe — analisando...`)
-      analyzeHtml(altHtml)
-      break
-    }
-  }
-
-  console.log('\n' + '='.repeat(50))
-  console.log('✅ Diagnóstico concluído!')
-  console.log('\nCom base no output acima, atualize o SCRAPER_CONFIG em update-prices.js:')
-  console.log('  cardSelector:  → tag/classe do container de cada produto')
-  console.log('  titleSelector: → tag/classe do título dentro do card')
-  console.log('  priceSelector: → tag/classe do preço dentro do card')
+  console.log('🔍 RussoGames — Inspetor de APIs de Preços')
+  console.log('='.repeat(55))
+  await inspectDigiseller()
+  await inspectSteam()
+  console.log('\n\n' + '='.repeat(55))
+  console.log('✅ Inspeção concluída.')
 }
 
 main().catch(err => {
