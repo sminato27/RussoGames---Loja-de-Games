@@ -4,15 +4,16 @@
  * ============================================================
  *
  * Fontes:
- *   price         → Digiseller API (api.digiseller.com)
- *   originalPrice → Steam Store API oficial (store.steampowered.com)
+ *   price         → Digiseller API pública (sem autenticação)
+ *                   Endpoint: /api/products/list?ids=...
+ *   originalPrice → Steam Store API oficial
+ *                   Endpoint: /api/appdetails?appids=...
  *
  * Uso local:
- *   cd scripts && npm install && node update-prices.js
+ *   cd scripts && node update-prices.js
  *
  * Em produção:
  *   GitHub Actions executa automaticamente a cada 6h.
- *   Ver: .github/workflows/update-prices.yml
  * ============================================================
  */
 
@@ -25,288 +26,193 @@ const ROOT        = path.resolve(__dirname, '..')
 const PRICES_FILE = path.join(ROOT, 'public', 'prices.json')
 
 // ─────────────────────────────────────────────────────────────
-// 🗂️  CATÁLOGO DE PRODUTOS
+// 🗂️  CATÁLOGO — mantenha sincronizado com src/data/products.js
 //
-// Mantenha sincronizado com src/data/products.js.
-// Campos:
-//   id                 → mesmo ID do products.js
-//   digisellerProductId → valor do parâmetro id_d na paymentUrl
-//   steamAppId         → ID numérico da página do jogo na Steam
+// digisellerProductId → o número id_d da paymentUrl
+// steamAppId          → o número na URL da página Steam
 // ─────────────────────────────────────────────────────────────
 const PRODUCTS = [
-  {
-    id: 1,
-    title: 'Crimson Desert — Deluxe',
-    digisellerProductId: 5792408,
-    steamAppId: 3321460,
-  },
-  {
-    id: 2,
-    title: 'Black Myth: Wukong — Deluxe',
-    digisellerProductId: 4573385,
-    steamAppId: 2358720,
-  },
-  {
-    id: 3,
-    title: 'Resident Evil Requiem — Deluxe',
-    digisellerProductId: 5725897,
-    steamAppId: 3764200,
-  },
-  {
-    id: 7,
-    title: 'EA Sports FC 26',
-    digisellerProductId: 5431131,
-    steamAppId: 3405690,
-  },
-  {
-    id: 10,
-    title: "Assassin's Creed Shadows — Deluxe",
-    digisellerProductId: 5065337,
-    steamAppId: 3159330,
-  },
-  {
-    id: 11,
-    title: 'DOOM: The Dark Ages — Premium',
-    digisellerProductId: 5156821,
-    steamAppId: 3017860,
-  },
+  { id: 1,  title: 'Crimson Desert — Deluxe',           digisellerProductId: 5792408, steamAppId: 3321460 },
+  { id: 2,  title: 'Black Myth: Wukong — Deluxe',       digisellerProductId: 4573385, steamAppId: 2358720 },
+  { id: 3,  title: 'Resident Evil Requiem — Deluxe',    digisellerProductId: 5725897, steamAppId: 3764200 },
+  { id: 7,  title: 'EA Sports FC 26',                   digisellerProductId: 5431131, steamAppId: 3405690 },
+  { id: 10, title: "Assassin's Creed Shadows — Deluxe", digisellerProductId: 5065337, steamAppId: 3159330 },
+  { id: 11, title: 'DOOM: The Dark Ages — Premium',     digisellerProductId: 5156821, steamAppId: 3017860 },
 ]
 
-// ─────────────────────────────────────────────────────────────
-// ⚙️  CONFIGURAÇÃO
-// ─────────────────────────────────────────────────────────────
-const CONFIG = {
-  digiseller: {
-    // API pública da Digiseller — não precisa de autenticação para leitura
-    apiBase: 'https://api.digiseller.com/api',
-    currency: 'USD',
-  },
-  steam: {
-    apiBase: 'https://store.steampowered.com/api',
-    countryCode: 'us',
-    batchSize: 10,       // máximo seguro de appids por request
-    batchDelay: 1000,    // ms entre batches
-  },
-  http: {
-    timeout: 15000,
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-  },
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'Accept':     'application/json',
 }
+const TIMEOUT = 15_000
 
-// ═══════════════════════════════════════════════════════════════
-// UTILITÁRIOS HTTP
-// ═══════════════════════════════════════════════════════════════
-
-async function fetchJson(url, label = url) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), CONFIG.http.timeout)
+// ─────────────────────────────────────────────────────────────
+// HTTP
+// ─────────────────────────────────────────────────────────────
+async function fetchJson(url, label) {
+  const ctrl  = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT)
   try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': CONFIG.http.userAgent },
-      signal: controller.signal,
-    })
+    const res = await fetch(url, { headers: HEADERS, signal: ctrl.signal })
     clearTimeout(timer)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     return await res.json()
   } catch (err) {
     clearTimeout(timer)
-    console.warn(`  ⚠  ${label}: ${err.message}`)
+    console.warn(`  ⚠  ${label ?? url}: ${err.message}`)
     return null
   }
 }
 
-/** Formata centavos → "X.XX" */
-function centsToPrice(cents) {
-  return (cents / 100).toFixed(2)
-}
-
-/** Lê prices.json existente para usar como fallback */
 async function loadExistingPrices() {
   try {
-    const raw = await fs.readFile(PRICES_FILE, 'utf8')
-    return JSON.parse(raw)
+    return JSON.parse(await fs.readFile(PRICES_FILE, 'utf8'))
   } catch {
     return { version: 1, lastUpdated: null, products: {} }
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// FONTE 1 — Digiseller API
-// ═══════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────
+// FONTE 1 — Digiseller API (price de venda)
 //
-// Endpoint: GET /api/products/{id}/content?currency=USD
-// Retorna JSON com campo `price` (já em USD, valor float)
+// Endpoint público sem autenticação:
+//   GET /api/products/list?ids={id1},{id2},...&lang=en-US
 //
-// Digiseller é a plataforma por trás do steamaccountpro.exaccess.com.
-// Os IDs dos produtos estão nos parâmetros id_d das paymentUrls.
-// ═══════════════════════════════════════════════════════════════
-
+// Retorna array com campos:
+//   id         → digisellerProductId
+//   price_usd  → preço em USD (já convertido)
+//   price_rub  → preço em RUB (moeda base do vendedor)
+// ─────────────────────────────────────────────────────────────
 async function fetchDigisellerPrices() {
-  const result = new Map()   // Map<productId, priceString>
+  const result = new Map()
 
-  console.log('\n📥 Buscando preços de venda via Digiseller API...')
+  const ids = PRODUCTS.map(p => p.digisellerProductId).join(',')
+  const url = `https://api.digiseller.com/api/products/list?ids=${ids}&lang=en-US`
 
-  for (const product of PRODUCTS) {
-    if (!product.digisellerProductId) continue
+  console.log('\n📥 Buscando preços via Digiseller API (batch)...')
+  console.log(`   URL: ${url}`)
 
-    const url  = `${CONFIG.digiseller.apiBase}/products/${product.digisellerProductId}/content?currency=${CONFIG.digiseller.currency}`
-    const data = await fetchJson(url, product.title)
+  const data = await fetchJson(url, 'Digiseller /api/products/list')
+  if (!data) return result
 
-    if (!data) continue
+  // A resposta é um array de objetos
+  const items = Array.isArray(data) ? data : (data.products ?? [])
 
-    // A API pode retornar o preço em vários campos dependendo da versão
-    // Tentamos em ordem de prioridade
-    const rawPrice =
-      data?.product?.price  ??   // formato padrão
-      data?.price           ??   // formato simplificado
-      data?.info?.price     ??   // formato legado
-      null
+  for (const item of items) {
+    const digiId = item.id
+    const product = PRODUCTS.find(p => p.digisellerProductId === digiId)
+    if (!product) continue
 
-    if (rawPrice == null) {
-      console.log(`  ⚠  ${product.title}: campo price não encontrado na resposta`)
+    // price_usd é o campo direto em USD
+    const rawUsd = item.price_usd ?? item.priceUsd ?? null
+    if (rawUsd == null) {
+      console.log(`  ⚠  ${product.title}: campo price_usd ausente na resposta`)
       continue
     }
 
-    const price = parseFloat(rawPrice)
+    const price = parseFloat(rawUsd)
     if (isNaN(price) || price <= 0) {
-      console.log(`  ⚠  ${product.title}: preço inválido (${rawPrice})`)
+      console.log(`  ⚠  ${product.title}: price_usd inválido (${rawUsd})`)
       continue
     }
 
-    const formatted = price.toFixed(2)
-    result.set(product.id, formatted)
-    console.log(`  ✓  ${product.title}: $${formatted}`)
+    result.set(product.id, price.toFixed(2))
+    console.log(`  ✓  ${product.title}: $${price.toFixed(2)}`)
   }
 
   return result
 }
 
-// ═══════════════════════════════════════════════════════════════
-// FONTE 2 — Steam Store API (originalPrice)
-// ═══════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────
+// FONTE 2 — Steam Store API (originalPrice oficial)
 //
-// Endpoint: GET /api/appdetails?appids={id}&filters=price_overview&cc=us
+// Endpoint: GET /api/appdetails?appids={id1},{id2},...&filters=price_overview&cc=us
 // Retorna preço cheio em centavos (campo initial).
-// API gratuita, sem autenticação necessária.
-// ═══════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────
+async function fetchSteamPrices() {
+  const result = new Map()
 
-async function fetchSteamOriginalPrices() {
-  const result = new Map()   // Map<productId, priceString>
-  const withApp = PRODUCTS.filter(p => p.steamAppId)
+  const appIds = PRODUCTS.filter(p => p.steamAppId).map(p => p.steamAppId).join(',')
+  const url = `https://store.steampowered.com/api/appdetails?appids=${appIds}&filters=price_overview&cc=us&l=english`
 
-  console.log('\n📥 Buscando preços originais via Steam Store API...')
+  console.log('\n📥 Buscando preços originais via Steam API (batch)...')
 
-  const { batchSize, batchDelay } = CONFIG.steam
+  const data = await fetchJson(url, 'Steam /api/appdetails')
+  if (!data) return result
 
-  for (let i = 0; i < withApp.length; i += batchSize) {
-    const batch  = withApp.slice(i, i + batchSize)
-    const appIds = batch.map(p => p.steamAppId).join(',')
+  for (const product of PRODUCTS.filter(p => p.steamAppId)) {
+    const entry = data[product.steamAppId]
 
-    const url  = `${CONFIG.steam.apiBase}/appdetails?appids=${appIds}&filters=price_overview&cc=${CONFIG.steam.countryCode}&l=english`
-    const data = await fetchJson(url, 'Steam API batch')
-
-    if (!data) continue
-
-    for (const product of batch) {
-      const entry = data[product.steamAppId]
-
-      if (!entry?.success) {
-        console.log(`  ⚠  App ${product.steamAppId} (${product.title}): não encontrado`)
-        continue
-      }
-
-      const priceOverview = entry.data?.price_overview
-      if (!priceOverview) {
-        // Pode ser free-to-play ou jogo sem preço ainda
-        console.log(`  ℹ  ${product.title}: sem price_overview (free / pre-release?)`)
-        continue
-      }
-
-      // initial = preço cheio em centavos (sem promoção)
-      const cents = priceOverview.initial
-      if (cents > 0) {
-        const formatted = centsToPrice(cents)
-        result.set(product.id, formatted)
-        console.log(`  ✓  ${product.title}: $${formatted} (Steam original)`)
-      }
+    if (!entry?.success) {
+      console.log(`  ⚠  ${product.title}: appId ${product.steamAppId} não encontrado`)
+      continue
     }
 
-    // Aguarda entre batches para respeitar rate limit
-    if (i + batchSize < withApp.length) {
-      await new Promise(r => setTimeout(r, batchDelay))
+    const po = entry.data?.price_overview
+    if (!po) {
+      console.log(`  ℹ  ${product.title}: sem price_overview (free-to-play ou pre-release)`)
+      continue
+    }
+
+    // initial = preço cheio em centavos, sem promoção
+    if (po.initial > 0) {
+      const price = (po.initial / 100).toFixed(2)
+      result.set(product.id, price)
+      console.log(`  ✓  ${product.title}: $${price} (Steam inicial)`)
     }
   }
 
   return result
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────
 // MAIN
-// ═══════════════════════════════════════════════════════════════
-
+// ─────────────────────────────────────────────────────────────
 async function main() {
   console.log('🚀 RussoGames — Atualizador de Preços')
-  console.log('='.repeat(48))
+  console.log('='.repeat(50))
 
   const existing    = await loadExistingPrices()
   const salePrices  = await fetchDigisellerPrices()
-  const steamPrices = await fetchSteamOriginalPrices()
+  const steamPrices = await fetchSteamPrices()
 
-  console.log('\n' + '='.repeat(48))
+  console.log('\n' + '='.repeat(50))
   console.log('📊 Aplicando preços...\n')
 
   const products = {}
   let changed = false
 
   for (const product of PRODUCTS) {
-    const prev         = existing.products?.[product.id] ?? {}
-    const newPrice     = salePrices.get(product.id)  ?? prev.price         ?? null
-    const newOrigPrice = steamPrices.get(product.id) ?? prev.originalPrice ?? null
+    const prev    = existing.products?.[product.id] ?? {}
+    const newSale = salePrices.get(product.id)  ?? prev.price         ?? null
+    const newOrig = steamPrices.get(product.id) ?? prev.originalPrice ?? null
 
-    products[product.id] = {
-      price:         newPrice,
-      originalPrice: newOrigPrice,
-    }
+    products[product.id] = { price: newSale, originalPrice: newOrig }
 
-    // Detecta e exibe mudanças
-    if (prev.price !== newPrice || prev.originalPrice !== newOrigPrice) {
+    if (prev.price !== newSale || prev.originalPrice !== newOrig) {
       changed = true
-      const priceChange  = prev.price         !== newPrice     ? ` $${prev.price ?? '–'} → $${newPrice}` : ''
-      const origChange   = prev.originalPrice !== newOrigPrice ? ` $${prev.originalPrice ?? '–'} → $${newOrigPrice}` : ''
       console.log(`  📝 ${product.title}`)
-      if (priceChange)  console.log(`     venda:    ${priceChange}`)
-      if (origChange)   console.log(`     original: ${origChange}`)
+      if (prev.price         !== newSale) console.log(`     venda:    $${prev.price ?? '–'} → $${newSale}`)
+      if (prev.originalPrice !== newOrig) console.log(`     original: $${prev.originalPrice ?? '–'} → $${newOrig}`)
     } else {
-      console.log(`  ✓  ${product.title} — sem mudança ($${newPrice} / $${newOrigPrice})`)
+      console.log(`  ✓  ${product.title} — sem mudança ($${newSale} / $${newOrig})`)
     }
   }
 
-  // Salva prices.json
-  const output = {
-    version:     1,
-    lastUpdated: new Date().toISOString(),
-    products,
-  }
+  await fs.writeFile(
+    PRICES_FILE,
+    JSON.stringify({ version: 1, lastUpdated: new Date().toISOString(), products }, null, 2) + '\n',
+    'utf8'
+  )
 
-  await fs.writeFile(PRICES_FILE, JSON.stringify(output, null, 2) + '\n', 'utf8')
-
-  console.log('\n' + '='.repeat(48))
-  if (changed) {
-    console.log('✅ prices.json atualizado com novos preços!')
-  } else {
-    console.log('✅ Nenhuma mudança — prices.json mantido.')
-  }
+  console.log('\n' + '='.repeat(50))
+  console.log(changed ? '✅ prices.json atualizado!' : '✅ Sem mudanças — prices.json mantido.')
   console.log(`📄 ${PRICES_FILE}`)
 
-  // Falha explícita se não buscou nada (útil para alertas no GitHub Actions)
-  const totalFetched = salePrices.size + steamPrices.size
-  if (totalFetched === 0) {
-    console.error('\n❌ Nenhum preço obtido. Verifique a conectividade e os IDs dos produtos.')
+  if (salePrices.size === 0 && steamPrices.size === 0) {
+    console.error('\n❌ Nenhum preço obtido. Verifique a conectividade.')
     process.exit(1)
   }
 }
 
-main().catch(err => {
-  console.error('❌ Erro fatal:', err)
-  process.exit(1)
-})
+main().catch(err => { console.error('❌ Erro fatal:', err); process.exit(1) })
