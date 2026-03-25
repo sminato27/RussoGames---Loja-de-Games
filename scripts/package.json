@@ -1,0 +1,17 @@
+{
+  "name": "russogames-price-updater",
+  "version": "1.0.0",
+  "description": "Scraper de preços automático para RussoGames",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "update": "node update-prices.js",
+    "test-selectors": "node test-selectors.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
