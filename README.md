@@ -1,145 +1,183 @@
-# RussoGames 🎮
+# 🎮 RussoGames - Sua Loja de Jogos com Preços Sempre Atualizados!
 
-Loja de ativações Steam com atualização automática de preços.
+Bem-vindo ao **RussoGames**, uma loja online moderna e automatizada para ativações de jogos Steam e EA App! Aqui você encontra os melhores preços para jogos incríveis como *Crimson Desert*, *Black Myth: Wukong* e muito mais, com ativação offline garantida e suporte 24/7.
 
----
+![RussoGames Banner](https://img.shields.io/badge/Status-Ativo-brightgreen) ![React](https://img.shields.io/badge/React-18.3.1-blue) ![Vite](https://img.shields.io/badge/Vite-5.4.2-purple)
 
-## 🚀 Atualização Automática de Preços
+## ✨ O Que Torna Este Projeto Especial?
 
-Os preços são atualizados **a cada 6 horas** via GitHub Actions, sem intervenção manual.
+- **Preços Automáticos**: Atualização a cada 6 horas via GitHub Actions – sem intervenção manual!
+- **Interface Moderna**: Desenvolvida com React e Vite para uma experiência rápida e responsiva.
+- **Catálogo Dinâmico**: Fácil de expandir com novos jogos.
+- **Integração com APIs**: Usa APIs oficiais da Steam e Digiseller para preços precisos.
+- **Deploy Automático**: Hospedado na Vercel, com reimplantações instantâneas após atualizações.
 
-| Campo | Fonte | Como funciona |
-|-------|-------|---------------|
-| `price` | Digiseller API | O site steamaccountpro usa a plataforma Digiseller. A API pública retorna o preço de venda pelo `id_d` de cada produto (presente na paymentUrl). |
-| `originalPrice` | Steam Store API oficial | Endpoint `/api/appdetails` retorna o preço cheio em centavos, sem promoção. |
+## 🚀 Como Funciona?
 
-### Fluxo completo
+O RussoGames combina dados estáticos de produtos com preços dinâmicos atualizados automaticamente. Veja o fluxo mágico:
 
+1. **GitHub Actions** roda a cada 6 horas (cron job).
+2. O script `update-prices.js` consulta:
+   - **Digiseller API** para o preço de venda atual.
+   - **Steam Store API** para o preço original oficial.
+3. Os preços são salvos em `public/prices.json` e commitados automaticamente.
+4. A Vercel detecta o push e reimplanta o site em ~30 segundos.
+5. O frontend carrega os preços via o hook `usePrices` e exibe no site.
+
+### Diagrama do Fluxo
 ```
-GitHub Actions (cron a cada 6h)
-  ↓
-scripts/update-prices.js
-  ├─ Digiseller API  (id_d de cada produto) → price
-  └─ Steam Store API (steamAppId)           → originalPrice
-  ↓
-public/prices.json (commitado automaticamente se mudou)
-  ↓
-Vercel detecta push → redeploy em ~30s
-  ↓
-Frontend carrega os novos preços via usePrices hook
-```
-
----
-
-## ⚙️ Configuração inicial (faça uma vez)
-
-### 1. Habilitar escrita no GitHub Actions
-
-Settings → Actions → General → Workflow permissions:
-> ✅ Read and write permissions
-
-### 2. Testar localmente
-
-```bash
-cd scripts && npm install
-
-# Inspeciona as APIs e imprime a resposta bruta de cada produto
-node test-selectors.js
-
-# Executa a atualização completa e grava public/prices.json
-node update-prices.js
+GitHub Actions (⏰ a cada 6h)
+    ↓
+Scripts de Atualização
+    ├─ Digiseller API → Preço de Venda
+    └─ Steam API → Preço Original
+    ↓
+prices.json Atualizado
+    ↓
+Vercel Redeploy
+    ↓
+Site com Preços Frescos! 🎉
 ```
 
----
+## 🛠️ Tecnologias Utilizadas
 
-## ➕ Adicionar novo produto
+- **Frontend**: React 18 + Vite (para builds rápidos)
+- **APIs**: Steam Store API, Digiseller API
+- **Automação**: GitHub Actions para CI/CD
+- **Deploy**: Vercel (redeploy automático)
+- **Scripts**: Node.js puro (sem dependências extras)
 
-### 1. Encontre os IDs necessários
+## 📦 Instalação e Execução
 
-**digisellerProductId:** olhe o `paymentUrl` do produto:
+Quer rodar o projeto localmente? É super simples!
+
+### Pré-requisitos
+- Node.js (versão 18+)
+- Git
+
+### Passos
+1. **Clone o repositório**:
+   ```bash
+   git clone https://github.com/sminato27/RussoGames---Loja-de-Games.git
+   cd RussoGames---Loja-de-Games
+   ```
+
+2. **Instale as dependências**:
+   ```bash
+   npm install
+   ```
+
+3. **Rode o servidor de desenvolvimento**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Abra no navegador**: Acesse `http://localhost:5173` e veja a magia acontecer!
+
+### Scripts Disponíveis
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Gera build de produção
+- `npm run preview` - Visualiza o build localmente
+
+## 🏗️ Estrutura do Projeto
+
+Entenda como o código está organizado:
+
 ```
-https://www.oplata.info/asp2/pay_wm.asp?id_d=5792408&...
-                                              ^^^^^^^
-                                              digisellerProductId
+RussoGames/
+├── public/
+│   └── prices.json          # Preços dinâmicos (atualizados automaticamente)
+├── scripts/
+│   ├── update-prices.js     # Script de atualização de preços
+│   ├── test-selectors.js    # Ferramenta de debug para APIs
+│   └── package.json         # Configuração dos scripts
+├── src/
+│   ├── components/          # Componentes React (Header, ProductCard, etc.)
+│   ├── data/
+│   │   └── products.js      # Catálogo de produtos
+│   ├── hooks/
+│   │   └── usePrices.js     # Hook para carregar preços dinâmicos
+│   ├── App.jsx              # Componente principal
+│   └── main.jsx             # Ponto de entrada
+├── .github/workflows/       # GitHub Actions para automação
+├── package.json             # Dependências do frontend
+└── vite.config.js           # Configuração do Vite
 ```
 
-**steamAppId:** acesse a página do jogo em `store.steampowered.com` e copie o número da URL:
-```
-https://store.steampowered.com/app/3321460/Crimson_Desert/
-                                   ^^^^^^^
-                                   steamAppId
-```
+## ➕ Como Adicionar um Novo Jogo
 
-### 2. Adicione em `src/data/products.js`
+Quer expandir o catálogo? Siga estes passos:
 
-```js
+### 1. Encontre os IDs Necessários
+- **digisellerProductId**: Olhe a URL de pagamento do produto (o número após `id_d=`).
+- **steamAppId**: O número na URL da página do jogo na Steam (ex: `store.steampowered.com/app/3321460/`).
+
+### 2. Adicione no Catálogo (`src/data/products.js`)
+```javascript
 {
   id: 12,
   title: "Nome do Jogo",
   subtitle: "STEAM • Ativação Offline",
-  description: `Descrição...`,
-  price: "$0.00",                    // atualizado automaticamente
-  originalPrice: "$0.00",            // atualizado automaticamente
+  description: `Descrição incrível do jogo...`,
+  price: "$0.00",              // Atualizado automaticamente
+  originalPrice: "$0.00",      // Atualizado automaticamente
   steamAppId: 123456,
   digisellerProductId: 9999999,
   category: "Steam",
   badge: "Novo",
   image: "https://cdn.akamai.steamstatic.com/steam/apps/123456/header.jpg",
   paymentUrl: "https://www.oplata.info/asp2/pay_wm.asp?id_d=9999999&ai=1444941&_ow=0",
-  features: ["Feature 1", "Feature 2"],
+  features: ["Ativação offline", "Suporte 24/7"],
   tags: ["RPG", "Ação"],
-},
+}
 ```
 
-### 3. Adicione em `scripts/update-prices.js`
-
-```js
-const PRODUCTS = [
-  // ... produtos existentes ...
-  { id: 12, title: 'Nome do Jogo', digisellerProductId: 9999999, steamAppId: 123456 },
-]
+### 3. Atualize o Script de Preços (`scripts/update-prices.js`)
+Adicione na lista `PRODUCTS`:
+```javascript
+{ id: 12, title: 'Nome do Jogo', digisellerProductId: 9999999, steamAppId: 123456 }
 ```
 
-### 4. Adicione o fallback em `public/prices.json`
+### 4. Configure GitHub Actions (Uma Vez)
+Para que a automação funcione:
+- Vá para Settings → Actions → General → Workflow permissions
+- Marque "Read and write permissions"
 
-```json
-"12": { "price": "0.00", "originalPrice": "0.00" }
+### 5. Teste Localmente
+```bash
+cd scripts
+npm install
+node test-selectors.js  # Testa as APIs
+node update-prices.js   # Atualiza preços
 ```
 
-5. Commit e push — o próximo ciclo do Actions preencherá os preços reais.
+## ❓ Perguntas Frequentes (FAQ)
+
+**Os preços são realmente atualizados automaticamente?**  
+Sim! A cada 6 horas, o GitHub Actions roda os scripts e atualiza o `prices.json`.
+
+**E se a API estiver indisponível?**  
+O site mantém os preços anteriores – nunca mostra "$0.00".
+
+**Posso alterar a frequência de atualização?**  
+Claro! Edite o cron em `.github/workflows/update-prices.yml`. Ex: `'0 */3 * * *'` para cada 3 horas.
+
+**Como adicionar mais plataformas além da Steam?**  
+Basta adicionar novas categorias em `products.js` e ajustar os scripts para novas APIs.
+
+## 🤝 Contribuição
+
+Adoraria sua ajuda! Para contribuir:
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto é open-source sob a licença MIT. Sinta-se à vontade para usar e modificar!
 
 ---
 
-## 📁 Estrutura
-
-```
-├── .github/workflows/update-prices.yml  # Cron job (a cada 6h)
-├── public/prices.json                   # Preços dinâmicos (gerado automaticamente)
-├── scripts/
-│   ├── update-prices.js                 # Scraper principal (Digiseller + Steam API)
-│   ├── test-selectors.js                # Inspetor de APIs (debug)
-│   └── package.json                     # Sem dependências externas
-└── src/
-    ├── data/products.js                 # Catálogo + fallback de preços
-    ├── hooks/usePrices.js               # Hook React → carrega prices.json
-    └── App.jsx                          # Mescla preços estáticos + dinâmicos
-```
-
----
-
-## ❓ FAQ
-
-**Preços pararam de atualizar?**
-1. Veja o log do Actions no GitHub
-2. Rode `node scripts/test-selectors.js` — imprime a resposta bruta das APIs
-3. Verifique se os `digisellerProductId` estão corretos nas paymentUrls
-
-**O que acontece se a API falhar?**
-O script preserva o preço anterior. O site nunca exibe "$0.00".
-
-**Posso mudar a frequência de atualização?**
-Edite o cron em `.github/workflows/update-prices.yml`.
-Ex: `'0 */3 * * *'` = a cada 3 horas.
-
-**O workflow precisa de alguma configuração de token?**
-Não — usa o `GITHUB_TOKEN` automático. Só precisa que as permissões de escrita estejam habilitadas (passo 1 acima).
+Feito com ❤️ para gamers que amam bons preços. Divirta-se comprando! 🎮🚀
