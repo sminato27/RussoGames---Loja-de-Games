@@ -1,3 +1,9 @@
+.catalogAnchor {
+  display: block;
+  height: 0;
+  scroll-margin-top: 84px;
+}
+
 .wrapper {
   padding: 2.5rem 0 1.5rem;
   border-bottom: 1px solid var(--border);
@@ -147,6 +153,10 @@
 
 /* Responsive */
 @media (max-width: 600px) {
+  .catalogAnchor {
+    scroll-margin-top: 72px;
+  }
+
   .wrapper {
     top: 56px;
     padding: 1.5rem 0 1rem;
