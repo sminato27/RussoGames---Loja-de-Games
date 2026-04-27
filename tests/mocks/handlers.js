@@ -1,0 +1,22 @@
+import { http, HttpResponse } from 'msw'
+
+export const defaultPricesPayload = {
+  version: 1,
+  lastUpdated: '2026-04-27T19:10:33.828Z',
+  products: {
+    1: { price: '3.97', originalPrice: '69.99' },
+    2: { price: '3.97', originalPrice: '59.99' },
+    3: { price: '3.11', originalPrice: '69.99' },
+    4: { price: '3.11', originalPrice: '59.99' },
+    5: { price: '4.63', originalPrice: '59.99' },
+    7: { price: '5.96', originalPrice: '69.99' },
+    10: { price: '3.11', originalPrice: '69.99' },
+    11: { price: '3.11', originalPrice: '69.99' },
+  },
+}
+
+export const handlers = [
+  http.get('*/prices.json', () => {
+    return HttpResponse.json(defaultPricesPayload)
+  }),
+]
