@@ -1,37 +1,37 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-13T18:54:31.454Z",
+  "lastUpdated": "2026-08-14T01:22:46.792Z",
   "products": {
     "1": {
-      "price": "3.61",
+      "price": "3.58",
       "originalPrice": "69.99"
     },
     "2": {
-      "price": "3.61",
+      "price": "3.58",
       "originalPrice": "59.99"
     },
     "3": {
-      "price": "2.83",
+      "price": "2.80",
       "originalPrice": "69.99"
     },
     "4": {
-      "price": "2.83",
+      "price": "2.80",
       "originalPrice": "49.99"
     },
     "5": {
-      "price": "3.61",
+      "price": "3.58",
       "originalPrice": "59.99"
     },
     "7": {
-      "price": "5.42",
+      "price": "5.37",
       "originalPrice": "69.99"
     },
     "10": {
-      "price": "2.83",
+      "price": "2.80",
       "originalPrice": "69.99"
     },
     "11": {
-      "price": "2.83",
+      "price": "2.80",
       "originalPrice": "69.99"
     }
   }
