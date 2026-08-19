@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-18T18:28:36.178Z",
+  "lastUpdated": "2026-08-19T00:53:47.628Z",
   "products": {
     "1": {
-      "price": "3.53",
+      "price": "3.52",
       "originalPrice": "69.99"
     },
     "2": {
-      "price": "3.53",
+      "price": "3.52",
       "originalPrice": "59.99"
     },
     "3": {
@@ -19,11 +19,11 @@
       "originalPrice": "49.99"
     },
     "5": {
-      "price": "3.53",
+      "price": "3.52",
       "originalPrice": "59.99"
     },
     "7": {
-      "price": "5.29",
+      "price": "5.28",
       "originalPrice": "69.99"
     },
     "10": {
